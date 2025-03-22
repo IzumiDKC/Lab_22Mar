@@ -1,2 +1,1 @@
-# NNPTUD_S5
-Code Hang Tuan
+# Nguyen Huu Dien - 2180606944

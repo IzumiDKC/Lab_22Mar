@@ -4,6 +4,8 @@ let productModel = require('../schemas/products')
 let categoryModel = require('../schemas/category')
 let {CreateErrorRes,
   CreateSuccessRes} = require('../utils/responseHandler')
+  
+let { check_authentication, check_authorization } = require('../utils/check_auth');
 
 /* GET users listing. */
 router.get('/', async function(req, res, next) {
@@ -23,65 +25,56 @@ router.get('/:id', async function(req, res, next) {
     next(error)
   }
 });
-router.post('/', async function(req, res, next) {
+
+router.post('/', check_authentication, check_authorization(['Mod']), async function (req, res, next) {
   try {
-    let body = req.body
-    let category = await categoryModel.findOne({
-      name:body.category
-    })
-    if(category){
+      let body = req.body;
+      let category = await categoryModel.findOne({ name: body.category });
+
+      if (!category) {
+          throw new Error("Category không tồn tại");
+      }
+
       let newProduct = new productModel({
-        name:body.name,
-        price:body.price,
-        quantity:body.quantity,
-        category:category._id
-      })
+          name: body.name,
+          price: body.price,
+          quantity: body.quantity,
+          category: category._id
+      });
+
       await newProduct.save();
-      CreateSuccessRes(res,newProduct,200);
-    }else{
-      throw new Error("cate khong ton tai")
-    } 
+      CreateSuccessRes(res, newProduct, 200);
   } catch (error) {
-    next(error)
+      next(error);
   }
 });
-router.put('/:id', async function(req, res, next) {
+
+router.put('/:id', check_authentication, check_authorization(['Mod']), async function (req, res, next) {
   let id = req.params.id;
   try {
-    let body = req.body
-    let updatedInfo = {};
-    if(body.name){
-      updatedInfo.name = body.name;
-    }
-    if(body.price){
-      updatedInfo.price = body.price;
-    }
-    if(body.quantity){
-      updatedInfo.quantity = body.quantity;
-    }
-    if(body.category){
-      updatedInfo.category = body.category;
-    }
-    let updateProduct = await productModel.findByIdAndUpdate(
-      id,updatedInfo,{new:true}
-    )
-    CreateSuccessRes(res,updateProduct,200);
+      let body = req.body;
+      let updatedInfo = {};
+
+      if (body.name) updatedInfo.name = body.name;
+      if (body.price) updatedInfo.price = body.price;
+      if (body.quantity) updatedInfo.quantity = body.quantity;
+      if (body.category) updatedInfo.category = body.category;
+
+      let updatedProduct = await productModel.findByIdAndUpdate(id, updatedInfo, { new: true });
+      CreateSuccessRes(res, updatedProduct, 200);
   } catch (error) {
-    next(error)
+      next(error);
   }
 });
-router.delete('/:id', async function(req, res, next) {
+
+
+router.delete('/:id', check_authentication, check_authorization(['Admin']), async function (req, res, next) {
   let id = req.params.id;
   try {
-    let body = req.body
-    let updateProduct = await productModel.findByIdAndUpdate(
-      id,{
-        isDeleted:true
-      },{new:true}
-    )
-    CreateSuccessRes(res,updateProduct,200);
+      let updatedProduct = await productModel.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
+      CreateSuccessRes(res, updatedProduct, 200);
   } catch (error) {
-    next(error)
+      next(error);
   }
 });
 

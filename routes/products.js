@@ -85,4 +85,24 @@ router.delete('/:id', async function(req, res, next) {
   }
 });
 
+router.get('/:slugcategory/:slugproduct', async (req, res, next) => {
+  try {
+      let { slugcategory, slugproduct } = req.params;
+
+      // Tìm category theo slug
+      let category = await categoryModel.findOne({ slug: slugcategory });
+      if (!category) return CreateErrorRes(res, "Category not found", 404);
+
+      // Tìm product theo slug và category
+      let product = await productModel.findOne({ slug: slugproduct, category: category._id });
+      if (!product) return CreateErrorRes(res, "Product not found", 404);
+
+      CreateSuccessRes(res, product, 200);
+  } catch (error) {
+      next(error);
+  }
+});
+
+
+
 module.exports = router;
